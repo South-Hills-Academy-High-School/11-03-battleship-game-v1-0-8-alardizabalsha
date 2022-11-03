@@ -3,6 +3,7 @@ namespace SpriteKind {
     export const Boat0 = SpriteKind.create()
     export const Boat1 = SpriteKind.create()
     export const Boat2 = SpriteKind.create()
+    export const cpuhit = SpriteKind.create()
 }
 /**
  * TODO:
@@ -38,6 +39,25 @@ function updatePX (whichPlayer: string) {
         }
     }
 }
+function searchnsew () {
+    grid.place(cursor, grid.add(tiles.getTileLocation(cpuLastHitRow, cpuLastHitCol), 0, -1))
+    if (cpuLastHitRow > 0 && !(isAttackingTwice(hitOrMissP2))) {
+        return 1
+    }
+    grid.place(cursor, grid.add(tiles.getTileLocation(cpuLastHitRow, cpuLastHitCol), 0, 1))
+    if (cpuLastHitRow < 6 && !(isAttackingTwice(hitOrMissP2))) {
+        return 1
+    }
+    grid.place(cursor, grid.add(tiles.getTileLocation(cpuLastHitRow, cpuLastHitCol), 1, 0))
+    if (cpuLastHitCol < 9 && !(isAttackingTwice(hitOrMissP2))) {
+        return 1
+    }
+    grid.place(cursor, grid.add(tiles.getTileLocation(cpuLastHitRow, cpuLastHitCol), -1, 0))
+    if (cpuLastHitCol > 0 && !(isAttackingTwice(hitOrMissP2))) {
+        return 1
+    }
+    return 0
+}
 function placeAllCPUBoats () {
     cpuLastHitRow = -1
     cpuLastHitCol = -1
@@ -71,8 +91,12 @@ function makeBoatVisible (boatArray: Sprite[]) {
     }
 }
 function cpuMove () {
-    cpuHitOrMiss()
     game.splash("CPU Move")
+    if (cpuHitOrMiss() && searchnsew()) {
+        game.splash(" The CPU is Looking for your boat")
+        isHitOrMiss(boatSpriteArrayP1, hitOrMissP2)
+        switchPlayer()
+    }
     grid.place(cursor, tiles.getTileLocation(randint(0, 9), randint(0, 6)))
     while (isAttackingTwice(hitOrMissP2)) {
         grid.place(cursor, tiles.getTileLocation(randint(0, 9), randint(0, 6)))
@@ -214,30 +238,51 @@ function isHitOrMiss (enemyBoats: Sprite[][], hitOrMissPX: Sprite[]) {
     for (let index = 0; index <= 2; index++) {
         for (let currentBoatSprite of enemyBoats[index]) {
             if (grid.spriteCol(currentBoatSprite) == grid.spriteCol(cursor) && grid.spriteRow(currentBoatSprite) == grid.spriteRow(cursor)) {
-                boomSprite = sprites.create(img`
-                    . . . . 2 2 2 2 2 2 2 2 . . . . 
-                    . . . 2 4 4 4 5 5 4 4 4 2 2 2 . 
-                    . 2 2 5 5 d 4 5 5 5 4 4 4 4 2 . 
-                    . 2 4 5 5 5 5 d 5 5 5 4 5 4 2 2 
-                    . 2 4 d d 5 5 5 5 5 5 d 4 4 4 2 
-                    2 4 5 5 d 5 5 5 d d d 5 5 5 4 4 
-                    2 4 5 5 4 4 4 d 5 5 d 5 5 5 4 4 
-                    4 4 4 4 . . 2 4 5 5 . . 4 4 4 4 
-                    . . b b b b 2 4 4 2 b b b b . . 
-                    . b d d d d 2 4 4 2 d d d d b . 
-                    b d d b b b 2 4 4 2 b b b d d b 
-                    b d d b b b b b b b b b b d d b 
-                    b b d 1 1 3 1 1 d 1 d 1 1 d b b 
-                    . . b b d d 1 1 3 d d 1 b b . . 
-                    . . 2 2 4 4 4 4 4 4 4 4 2 2 . . 
-                    . . . 2 2 4 4 4 4 4 2 2 2 . . . 
-                    `, SpriteKind.Projectile)
+                if (singlePlayerFlag == 1 && currentPlayer == "2") {
+                    boomSprite = sprites.create(img`
+                        . . . . 2 2 2 2 2 2 2 2 . . . . 
+                        . . . 2 4 4 4 5 5 4 4 4 2 2 2 . 
+                        . 2 2 5 5 d 4 5 5 5 4 4 4 4 2 . 
+                        . 2 4 5 5 5 5 d 5 5 5 4 5 4 2 2 
+                        . 2 4 d d 5 5 5 5 5 5 d 4 4 4 2 
+                        2 4 5 5 d 5 5 5 d d d 5 5 5 4 4 
+                        2 4 5 5 4 4 4 d 5 5 d 5 5 5 4 4 
+                        4 4 4 4 . . 2 4 5 5 . . 4 4 4 4 
+                        . . b b b b 2 4 4 2 b b b b . . 
+                        . b d d d d 2 4 4 2 d d d d b . 
+                        b d d b b b 2 4 4 2 b b b d d b 
+                        b d d b b b b b b b b b b d d b 
+                        b b d 1 1 3 1 1 d 1 d 1 1 d b b 
+                        . . b b d d 1 1 3 d d 1 b b . . 
+                        . . 2 2 4 4 4 4 4 4 4 4 2 2 . . 
+                        . . . 2 2 4 4 4 4 4 2 2 2 . . . 
+                        `, SpriteKind.cpuhit)
+                    cpuLastHitRow = grid.spriteRow(cursor)
+                    cpuLastHitCol = grid.spriteCol(cursor)
+                } else {
+                    boomSprite = sprites.create(img`
+                        . . . . 2 2 2 2 2 2 2 2 . . . . 
+                        . . . 2 4 4 4 5 5 4 4 4 2 2 2 . 
+                        . 2 2 5 5 d 4 5 5 5 4 4 4 4 2 . 
+                        . 2 4 5 5 5 5 d 5 5 5 4 5 4 2 2 
+                        . 2 4 d d 5 5 5 5 5 5 d 4 4 4 2 
+                        2 4 5 5 d 5 5 5 d d d 5 5 5 4 4 
+                        2 4 5 5 4 4 4 d 5 5 d 5 5 5 4 4 
+                        4 4 4 4 . . 2 4 5 5 . . 4 4 4 4 
+                        . . b b b b 2 4 4 2 b b b b . . 
+                        . b d d d d 2 4 4 2 d d d d b . 
+                        b d d b b b 2 4 4 2 b b b d d b 
+                        b d d b b b b b b b b b b d d b 
+                        b b d 1 1 3 1 1 d 1 d 1 1 d b b 
+                        . . b b d d 1 1 3 d d 1 b b . . 
+                        . . 2 2 4 4 4 4 4 4 4 4 2 2 . . 
+                        . . . 2 2 4 4 4 4 4 2 2 2 . . . 
+                        `, SpriteKind.cpuhit)
+                }
                 grid.place(boomSprite, grid.getLocation(cursor))
                 hitOrMissPX.push(boomSprite)
                 game.splash("" + hitOrMissPlayer + " HIT!! " + convertToText(isPlayerXWinner(enemyBoats, hitOrMissPX)) + " boats destroyed!")
-                cpuLastHitRow = grid.spriteRow(cursor)
-                cpuLastHitCol = grid.spriteCol(cursor)
-                return 1
+                return 0
             }
         }
     }
@@ -679,7 +724,29 @@ function cpuPlaceBoat2 () {
     }
 }
 function cpuHitOrMiss () {
+    mySprite = sprites.create(img`
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        `, SpriteKind.cpuhit)
     game.splash("Row:" + cpuLastHitRow + "Col:" + cpuLastHitCol)
+    if (hitOrMissP2[hitOrMissP1.length - 1].kind() == mySprite.kind()) {
+        return 0
+    }
+    return 0
 }
 function turnBoat (boatNum: number, boatRotateArray: string[]) {
     if (boatRotateArray[boatNum] == "up") {
@@ -700,6 +767,7 @@ function isOverlapping (boatSpriteArrayPX: Sprite[][]) {
     }
     return 0
 }
+let mySprite: Sprite = null
 let boomSprite: Sprite = null
 let hitOrMissPlayer = ""
 let iterator = 0
